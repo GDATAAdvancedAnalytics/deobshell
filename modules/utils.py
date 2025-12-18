@@ -51,6 +51,7 @@ def create_constant_string(value, string_type="SingleQuoted"):
 
 
 def create_array_literal_values(values, string_type="SingleQuoted"):
+    is_int = all(type(v) is int for v in values)
     new_array_ast = Element("ArrayLiteralAst",
                             {
                                 "StaticType": "System.Object[]",
@@ -58,12 +59,15 @@ def create_array_literal_values(values, string_type="SingleQuoted"):
     new_elements = Element("Elements")
 
     for val in values:
-        new_string_item = Element("StringConstantExpressionAst",
-                                  {
-                                      "StringConstantType": string_type
-                                  })
-        new_string_item.text = str(val)
-        new_elements.append(new_string_item)
+        if is_int:
+            new_item = Element("ConstantExpressionAst", {"StaticType": "int"})
+        else:
+            new_item = Element("StringConstantExpressionAst",
+                               {
+                                   "StringConstantType": string_type
+                               })
+        new_item.text = str(val)
+        new_elements.append(new_item)
 
     new_array_ast.append(new_elements)
     return new_array_ast

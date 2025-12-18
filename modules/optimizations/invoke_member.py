@@ -5,7 +5,7 @@ from xml.etree.ElementTree import Element
 
 from modules.ast import create_ast_file, read_ast_file
 from modules.logger import log_debug
-from modules.utils import replace_node, delete_node, create_array_literal_values
+from modules.utils import replace_node, delete_node, create_array_literal_values, get_array_literal_values
 
 
 def opt_invoke_expression(ast, parents):
@@ -153,5 +153,53 @@ def opt_invoke_reverse_array(ast, parents):
                         delete_node(ast, node, parents=parents)
 
                         return True
+
+    return False
+
+
+def opt_invoke_array_foreach(ast: Element, parents):
+    """
+    @(132,176,173,175,128,163,177,167,244,246,145,182,176,171,172,165).ForEach({$_ -bxor 194})
+    """
+    for node in ast.iter("InvokeMemberExpressionAst"):
+        subnodes = list(node)
+        if len(subnodes) == 3 and subnodes[0].tag == "Arguments" \
+                and subnodes[1].tag == "ArrayExpressionAst" \
+                and subnodes[2].tag == "StringConstantExpressionAst" \
+                and subnodes[2].text == "ForEach-Object":
+
+            command = next(subnodes[0].iter("CommandExpressionAst"), None)
+            if command is None or len(command) != 1 or command[0].tag != "BinaryExpressionAst":
+                return False
+
+            bin_expr = command[0]
+            if bin_expr[0].tag != "VariableExpressionAst" or bin_expr[1].tag != "ConstantExpressionAst" \
+                    or bin_expr[0].attrib["VariablePath"] != "_":
+                return False
+
+            arr_literal = next(subnodes[1].iter("ArrayLiteralAst"), None)
+            if arr_literal is None:
+                return False
+
+            array_values = get_array_literal_values(arr_literal)
+            if array_values is None or not all(type(v) is int for v in array_values):
+                return False
+
+            match bin_expr.attrib["Operator"]:
+                case "Bxor":
+                    bin_op = lambda a, b: a ^ b  # noqa:E731
+                case "Plus":
+                    bin_op = lambda a, b: a + b  # noqa:E731
+                case "Minus":
+                    bin_op = lambda a, b: a - b  # noqa:E731
+                case _:
+                    return False
+
+            assert bin_expr[1].text
+            array_values_mod = [bin_op(value, int(bin_expr[1].text)) for value in array_values]
+            new_array_elem = create_array_literal_values(array_values_mod)
+
+            replace_node(ast, node, new_array_elem, parents=parents)
+            return True
 
     return False

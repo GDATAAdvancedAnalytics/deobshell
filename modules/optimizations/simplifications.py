@@ -423,3 +423,18 @@ def opt_remove_nested_statement_blocks(ast, parents):
                 return True
 
     return False
+
+
+def opt_remove_sub_expression_if_constant(ast: Element, parents):
+    """
+    $('foo') -> 'foo', $(4) -> 4
+    """
+    for node in ast.iter("SubExpressionAst"):
+        if len(node) == 1 and node[0].tag == "StatementBlockAst":
+            command = node[0].find("./Statements/CommandExpressionAst")
+            if command is not None and len(command) == 1 \
+                    and command[0].tag in ("ConstantExpressionAst", "StringConstantExpressionAst"):
+                replace_node(ast, node, command[0], parents=parents)
+                return True
+
+    return False

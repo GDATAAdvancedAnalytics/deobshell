@@ -3,7 +3,7 @@ from xml.etree.ElementTree import Element
 
 from modules.logger import log_debug
 from modules.special_vars import SPECIAL_VARS_VALUES
-from modules.utils import replace_node, create_array_literal_values
+from modules.utils import replace_node, create_array_literal_values, get_array_literal_values
 
 
 def opt_convert_type_to_type(ast, parents):
@@ -95,6 +95,14 @@ def opt_convert_type_to_array(ast, parents):
                 log_debug("Replace (cast) string to array: '%s'" % arrayed)
 
                 replace_node(ast, node, new_array_ast, parents=parents)
+            else:
+                array_literal_node = node.find("ArrayLiteralAst")
+                if array_literal_node is not None:
+                    literals = get_array_literal_values(array_literal_node)
+                    converted = [chr(lit) if type(lit) is int else lit for lit in literals]
+                    new_array_ast = create_array_literal_values(converted)
+
+                    replace_node(ast, node, new_array_ast, parents=parents)
 
 
 def opt_convert_type_to_char(ast, parents):

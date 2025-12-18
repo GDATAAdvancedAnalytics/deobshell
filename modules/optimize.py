@@ -10,13 +10,13 @@ from modules.optimizations.dead_codes import opt_unused_variable, opt_remove_uni
     opt_remove_dead_loops, opt_remove_dead_switch_cases, opt_remove_dead_if_clauses
 from modules.optimizations.empty_nodes import opt_remove_empty_nodes
 from modules.optimizations.invoke_member import opt_invoke_split_string, opt_invoke_replace_string, \
-    opt_invoke_reverse_array, opt_invoke_expression
+    opt_invoke_reverse_array, opt_invoke_expression, opt_invoke_array_foreach
 from modules.optimizations.replace_long_names import opt_long_variable_names
 from modules.optimizations.simplifications import opt_convert_bogus_loops, opt_simplify_paren_single_expression, \
     opt_bareword_case, opt_constant_string_type, opt_prefixed_variable_case, opt_replace_constant_variable_by_value, \
     opt_simplify_single_array, opt_simplify_pipeline_single_command, opt_type_constraint_from_convert, \
     opt_command_element_as_bareword, opt_type_constraint_case, opt_special_variable_case, \
-    opt_lift_switch_with_just_default, opt_remove_nested_statement_blocks
+    opt_lift_switch_with_just_default, opt_remove_nested_statement_blocks, opt_remove_sub_expression_if_constant
 from modules.optimizations.type_convertions import opt_convert_type_to_int, opt_convert_type_to_type, \
     opt_convert_type_to_char, opt_convert_type_to_array, opt_convert_type_to_string
 from modules.optimizations.unary_expressions import opt_unary_expression_join
@@ -39,6 +39,7 @@ def optimize_pass(ast, stats, parents):
         opt_invoke_replace_string,
         opt_invoke_reverse_array,
         opt_invoke_expression,
+        opt_invoke_array_foreach,
         # Type conversion
         opt_convert_type_to_type,
         opt_convert_type_to_string,
@@ -69,6 +70,7 @@ def optimize_pass(ast, stats, parents):
         opt_alias,
         opt_convert_bogus_loops,
         opt_lift_switch_with_just_default,
+        opt_remove_sub_expression_if_constant,
         opt_remove_nested_statement_blocks,
         # Last
         opt_replace_constant_variable_by_value,
